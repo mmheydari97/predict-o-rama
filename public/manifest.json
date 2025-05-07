@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Predict-O-Rama",
+  "name": "Predict-O-Rama - YouTube Prediction Game",
   "icons": [
     {
       "src": "favicon.ico",
