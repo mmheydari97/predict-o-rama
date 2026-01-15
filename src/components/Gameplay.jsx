@@ -9,13 +9,21 @@ const Gameplay = () => {
   const { gameState, makePrediction, startNewRound, allPlayersPredicted, finishGame, errorMessage, setErrorMessage } = useContext(GameContext);
   const currentRoundData = gameState.rounds[gameState.currentRound - 1];
   const { yesLabel, noLabel } = gameState;
+  const [timestamp, setTimestamp] = React.useState('');
 
   if (!currentRoundData) return <p className="text-center text-muted-foreground p-10">Loading round...</p>;
+
+  const handleNextRound = () => {
+    startNewRound(timestamp);
+    setTimestamp(''); // Reset for next round
+  };
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6 animate-fadeIn">
       <h2 className="text-3xl font-bold text-center">{gameState.gameTitle} - Round {gameState.currentRound}</h2>
       <MessageBox message={errorMessage} type="error" onClose={() => setErrorMessage('')} />
+
+
 
       <Card>
         <CardHeader>
@@ -71,11 +79,20 @@ const Gameplay = () => {
           <p className="text-sm text-muted-foreground flex-1 text-center sm:text-left">
             {gameState.predictionsMadeThisRound.size} / {gameState.players.length} players predicted.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-center">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <input
+                type="text"
+                placeholder="Time (e.g. 1:45)"
+                value={timestamp}
+                onChange={(e) => setTimestamp(e.target.value)}
+                className="h-10 px-3 rounded-md border border-input bg-background text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 w-24 sm:w-32"
+              />
+            </div>
             <Button onClick={finishGame} variant="destructive" className="w-full sm:w-auto">
               <StepForward className="mr-2 h-4 w-4" /> End Game & Enter Answers
             </Button>
-            <Button onClick={startNewRound} disabled={!allPlayersPredicted} className="w-full sm:w-auto">
+            <Button onClick={handleNextRound} disabled={!allPlayersPredicted} className="w-full sm:w-auto">
               Next Round <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>

@@ -79,7 +79,7 @@ export const GameProvider = ({ children }) => {
         setGameState(prev => ({ ...prev, phase: 'playing' }));
     }, [gameState.players, gameState.videoId]);
 
-    const startNewRound = useCallback(() => {
+    const startNewRound = useCallback((timestamp = null) => {
         setErrorMessage('');
         setGameState(prev => ({
             ...prev,
@@ -87,7 +87,8 @@ export const GameProvider = ({ children }) => {
             rounds: [...prev.rounds, {
                 roundNumber: prev.currentRound + 1,
                 predictions: {}, // Player predictions for this round { playerId: { prediction: 'yes'/'no' } }
-                correctAnswer: null // 'yes', 'no', or null
+                correctAnswer: null, // 'yes', 'no', or null
+                timestamp: timestamp // Store the timestamp of when this round started
             }],
             currentRound: prev.currentRound + 1, // Increment round number
             predictionsMadeThisRound: new Set() // Reset predictions for the new round
