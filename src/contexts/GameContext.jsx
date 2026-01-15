@@ -79,19 +79,34 @@ export const GameProvider = ({ children }) => {
         setGameState(prev => ({ ...prev, phase: 'playing' }));
     }, [gameState.players, gameState.videoId]);
 
-    const startNewRound = useCallback(() => {
+    const startNewRound = useCallback((timestamp = null, correctAnswer = null) => {
         setErrorMessage('');
-        setGameState(prev => ({
-            ...prev,
+        setGameState(prev => {
+            const updatedRounds = [...prev.rounds];
+            // Update the current round (the one just finishing) with timestamp and correct answer
+            if (prev.currentRound > 0 && updatedRounds[prev.currentRound - 1]) {
+                updatedRounds[prev.currentRound - 1] = {
+                    ...updatedRounds[prev.currentRound - 1],
+                    timestamp: timestamp,
+                    correctAnswer: correctAnswer
+                };
+            }
+
             // Add a new round object
-            rounds: [...prev.rounds, {
+            updatedRounds.push({
                 roundNumber: prev.currentRound + 1,
-                predictions: {}, // Player predictions for this round { playerId: { prediction: 'yes'/'no' } }
-                correctAnswer: null // 'yes', 'no', or null
-            }],
-            currentRound: prev.currentRound + 1, // Increment round number
-            predictionsMadeThisRound: new Set() // Reset predictions for the new round
-        }));
+                predictions: {},
+                correctAnswer: null,
+                timestamp: null
+            });
+
+            return {
+                ...prev,
+                rounds: updatedRounds,
+                currentRound: prev.currentRound + 1,
+                predictionsMadeThisRound: new Set()
+            };
+        });
     }, []);
 
     const makePrediction = useCallback((playerId, prediction) => {
@@ -129,14 +144,30 @@ export const GameProvider = ({ children }) => {
         return gameState.players.length > 0 && gameState.predictionsMadeThisRound.size === gameState.players.length;
     }, [gameState.players, gameState.predictionsMadeThisRound]);
 
-    const finishGame = useCallback(() => {
+    const finishGame = useCallback((timestamp = null, correctAnswer = null) => {
         setErrorMessage('');
         if (gameState.rounds.length === 0) {
             setErrorMessage("Cannot finish game - no rounds have been played.");
             return;
         }
-        // Move to the phase where correct answers are entered
-        setGameState(prev => ({ ...prev, phase: 'answering' }));
+        setGameState(prev => {
+            const updatedRounds = [...prev.rounds];
+            // Update the final round with provided data
+            if (prev.currentRound > 0 && updatedRounds[prev.currentRound - 1]) {
+                updatedRounds[prev.currentRound - 1] = {
+                    ...updatedRounds[prev.currentRound - 1],
+                    timestamp: timestamp,
+                    // Only update correctAnswer if provided (might be null if just finishing)
+                    ...(correctAnswer !== null ? { correctAnswer } : {})
+                };
+            }
+
+            return {
+                ...prev,
+                rounds: updatedRounds,
+                phase: 'answering'
+            };
+        });
     }, [gameState.rounds]);
 
     const submitCorrectAnswer = useCallback((roundIndex, answer) => {
@@ -172,10 +203,23 @@ export const GameProvider = ({ children }) => {
         setErrorMessage('');
     }, []);
 
+    const removeLastRound = useCallback(() => {
+        setErrorMessage('');
+        setGameState(prev => {
+            if (prev.rounds.length === 0) return prev;
+            const updatedRounds = prev.rounds.slice(0, -1);
+            return {
+                ...prev,
+                rounds: updatedRounds,
+                currentRound: updatedRounds.length
+            };
+        });
+    }, []);
+
     // Context value passed down to consumers
     const value = useMemo(() => ({
-        gameState, newPlayerName, setNewPlayerName, addPlayer, removePlayer, startGame, startNewRound, makePrediction, allPlayersPredicted, finishGame, submitCorrectAnswer, viewResults, resetGame, errorMessage, setErrorMessage, videoPlayerRef, setCustomLabels, setGameTitleAction, setVideoIdAction
-    }), [gameState, newPlayerName, errorMessage, allPlayersPredicted, addPlayer, removePlayer, startGame, startNewRound, makePrediction, finishGame, submitCorrectAnswer, viewResults, resetGame, setCustomLabels, setGameTitleAction, setVideoIdAction]);
+        gameState, newPlayerName, setNewPlayerName, addPlayer, removePlayer, startGame, startNewRound, removeLastRound, makePrediction, allPlayersPredicted, finishGame, submitCorrectAnswer, viewResults, resetGame, errorMessage, setErrorMessage, videoPlayerRef, setCustomLabels, setGameTitleAction, setVideoIdAction
+    }), [gameState, newPlayerName, errorMessage, allPlayersPredicted, addPlayer, removePlayer, startGame, startNewRound, removeLastRound, makePrediction, finishGame, submitCorrectAnswer, viewResults, resetGame, setCustomLabels, setGameTitleAction, setVideoIdAction]);
 
     return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
 };

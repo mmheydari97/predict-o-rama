@@ -3,14 +3,16 @@ import { Trophy, Users, BarChart2, Zap, Lightbulb, Check, X, ArrowRight, Setting
 import { GameContext } from '../contexts/GameContext';
 import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../ui/shadcn-stubs';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-
+import ReviewAnswers from './ReviewAnswers';
 // Results Component (Show Game Results)
 const Results = () => {
   const { gameState, resetGame } = useContext(GameContext);
   const { yesLabel, noLabel } = gameState;
+  const [showReview, setShowReview] = React.useState(false);
 
   // Calculate player scores and stats
   const playerStats = useMemo(() => {
+    // ... (existing stats logic)
     const stats = gameState.players.map(player => {
       let correctPredictions = 0;
       let totalPredictions = 0;
@@ -102,6 +104,10 @@ const Results = () => {
   const COLORS = ['#10b981', '#ef4444', '#3b82f6', '#f59e0b', '#8b5cf6'];
   const PIE_COLORS = ['#10b981', '#ef4444'];
 
+  if (showReview) {
+    return <ReviewAnswers onBack={() => setShowReview(false)} />;
+  }
+
   return (
     <div className="w-full max-w-6xl mx-auto space-y-8 animate-fadeIn pb-12">
       <h2 className="text-3xl font-bold text-center flex items-center justify-center gap-2">
@@ -137,7 +143,7 @@ const Results = () => {
             <div className="text-3xl font-bold">{gameState.players.length}</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
@@ -148,7 +154,7 @@ const Results = () => {
             <div className="text-3xl font-bold">{gameState.rounds.length}</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
@@ -159,7 +165,7 @@ const Results = () => {
             <div className="text-3xl font-bold">{Math.round(gameStats.overallAccuracy)}%</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
@@ -260,7 +266,10 @@ const Results = () => {
             </TableBody>
           </Table>
         </CardContent>
-        <CardFooter className="flex justify-center">
+        <CardFooter className="flex justify-center gap-4">
+          <Button onClick={() => setShowReview(true)} variant="secondary" size="lg" className="px-8">
+            <Lightbulb className="mr-2 h-5 w-5" /> Review Answers
+          </Button>
           <Button onClick={resetGame} size="lg" className="px-8">
             <Settings className="mr-2 h-5 w-5" /> New Game
           </Button>

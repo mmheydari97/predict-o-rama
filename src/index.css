@@ -1,50 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root { /* Light mode variables (adjusted for better contrast/modern feel) */
+:root {
+  /* Light mode variables (adjusted for better contrast/modern feel) */
   --background: 0 0% 100%;
   --foreground: 240 10% 3.9%;
   --card: 0 0% 100%;
   --card-foreground: 240 10% 3.9%;
   --popover: 0 0% 100%;
   --popover-foreground: 240 10% 3.9%;
-  --primary: 262.1 83.3% 57.8%; /* Primary color */
-  --primary-foreground: 210 40% 98%; /* Text on primary */
-  --secondary: 240 4.8% 95.9%; /* Secondary bg */
-  --secondary-foreground: 240 5.9% 10%; /* Text on secondary */
-  --muted: 240 4.8% 95.9%; /* Muted bg */
-  --muted-foreground: 240 3.8% 46.1%; /* Muted text */
-  --accent: 240 4.8% 92.9%; /* Accent bg (slightly darker for hover) */
-  --accent-foreground: 240 5.9% 10%; /* Text on accent */
-  --destructive: 0 74.2% 50.2%; /* Destructive color (slightly adjusted) */
-  --destructive-foreground: 0 0% 98%; /* Text on destructive */
-  --border: 240 5.9% 90%; /* Border color */
-  --input: 240 5.9% 88%; /* Input border (slightly darker) */
-  --ring: 262.1 83.3% 57.8%; /* Focus ring (matches primary) */
-  --radius: 0.75rem; /* Default border radius */
+  --primary: 262.1 83.3% 57.8%;
+  /* Primary color */
+  --primary-foreground: 210 40% 98%;
+  /* Text on primary */
+  --secondary: 240 4.8% 95.9%;
+  /* Secondary bg */
+  --secondary-foreground: 240 5.9% 10%;
+  /* Text on secondary */
+  --muted: 240 4.8% 95.9%;
+  /* Muted bg */
+  --muted-foreground: 240 3.8% 46.1%;
+  /* Muted text */
+  --accent: 240 4.8% 92.9%;
+  /* Accent bg (slightly darker for hover) */
+  --accent-foreground: 240 5.9% 10%;
+  /* Text on accent */
+  --destructive: 0 74.2% 50.2%;
+  /* Destructive color (slightly adjusted) */
+  --destructive-foreground: 0 0% 98%;
+  /* Text on destructive */
+  --border: 240 5.9% 90%;
+  /* Border color */
+  --input: 240 5.9% 88%;
+  /* Input border (slightly darker) */
+  --ring: 262.1 83.3% 57.8%;
+  /* Focus ring (matches primary) */
+  --radius: 0.75rem;
+  /* Default border radius */
 }
 
-.dark { /* Dark mode variables (refined for modern look) */
-  --background: 240 10% 3.9%; /* Very dark background */
-  --foreground: 0 0% 98%; /* Light text */
-  --card: 240 10% 6.9%; /* Slightly lighter card background */
+.dark {
+  /* Dark mode variables (refined for modern look) */
+  --background: 240 10% 3.9%;
+  /* Very dark background */
+  --foreground: 0 0% 98%;
+  /* Light text */
+  --card: 240 10% 6.9%;
+  /* Slightly lighter card background */
   --card-foreground: 0 0% 98%;
   --popover: 240 10% 3.9%;
   --popover-foreground: 0 0% 98%;
-  --primary: 262.1 83.3% 62.8%; /* Slightly brighter primary in dark */
+  --primary: 262.1 83.3% 62.8%;
+  /* Slightly brighter primary in dark */
   --primary-foreground: 210 40% 98%;
-  --secondary: 240 3.7% 15.9%; /* Dark secondary */
+  --secondary: 240 3.7% 15.9%;
+  /* Dark secondary */
   --secondary-foreground: 0 0% 98%;
-  --muted: 240 3.7% 11.9%; /* Slightly lighter muted */
+  --muted: 240 3.7% 11.9%;
+  /* Slightly lighter muted */
   --muted-foreground: 240 5% 64.9%;
-  --accent: 240 3.7% 18.9%; /* Darker accent for hover */
+  --accent: 240 3.7% 18.9%;
+  /* Darker accent for hover */
   --accent-foreground: 0 0% 98%;
-  --destructive: 0 62.8% 50.6%; /* Slightly less intense destructive */
+  --destructive: 0 62.8% 50.6%;
+  /* Slightly less intense destructive */
   --destructive-foreground: 0 0% 98%;
-  --border: 240 3.7% 10.9%; /* Subtle border */
-  --input: 240 3.7% 13.9%; /* Slightly more visible input border */
-  --ring: 262.1 83.3% 57.8%; /* Visible focus ring */
+  --border: 240 3.7% 10.9%;
+  /* Subtle border */
+  --input: 240 3.7% 13.9%;
+  /* Slightly more visible input border */
+  --ring: 262.1 83.3% 57.8%;
+  /* Visible focus ring */
 }
 
 body {
@@ -56,35 +85,95 @@ body {
 }
 
 /* Ensure borders use variables */
-.dark .border { border-color: hsl(var(--border)); }
-.dark input, .dark select, .dark textarea { border-color: hsl(var(--input)); }
-.dark .card { border-color: hsl(var(--border)); }
-.dark section.border { border-color: hsl(var(--border)); }
-.dark hr { border-color: hsl(var(--border)) }
-.dark [class*="border-border"] { border-color: hsl(var(--border)) !important; }
+.dark .border {
+  border-color: hsl(var(--border));
+}
+
+.dark input,
+.dark select,
+.dark textarea {
+  border-color: hsl(var(--input));
+}
+
+.dark .card {
+  border-color: hsl(var(--border));
+}
+
+.dark section.border {
+  border-color: hsl(var(--border));
+}
+
+.dark hr {
+  border-color: hsl(var(--border))
+}
+
+.dark [class*="border-border"] {
+  border-color: hsl(var(--border)) !important;
+}
 
 /* Animations */
-@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-.animate-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.4s ease-out forwards;
+}
 
 @keyframes gradient-x {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
 }
+
 .animate-gradient-x {
   background-size: 200% 200%;
   animation: gradient-x 6s ease infinite;
 }
 
 /* Custom Scrollbar */
-::-webkit-scrollbar { height: 8px; width: 8px; }
-::-webkit-scrollbar-track { background: hsl(var(--muted) / 0.3); border-radius: 10px; }
-::-webkit-scrollbar-thumb { background: hsl(var(--primary) / 0.5); border-radius: 10px; border: 2px solid transparent; background-clip: content-box; }
-::-webkit-scrollbar-thumb:hover { background: hsl(var(--primary) / 0.7); }
+::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted) / 0.3);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.5);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.7);
+}
 
 /* Recharts adjustments */
-.recharts-tooltip-cursor { fill: hsl(var(--accent)/0.5); }
-.recharts-legend-item { margin-right: 15px !important; } /* Spacing for legend items */
+.recharts-tooltip-cursor {
+  fill: hsl(var(--accent)/0.5);
+}
 
-/* Import Inter font */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+.recharts-legend-item {
+  margin-right: 15px !important;
+}
+
+/* Spacing for legend items */

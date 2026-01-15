@@ -36,6 +36,21 @@ const GameSetup = () => {
     }
   };
 
+  // Handle URL change to update context immediately
+  const handleUrlChange = (e) => {
+    const newUrl = e.target.value;
+    setUrlLocal(newUrl);
+
+    const videoId = getYouTubeVideoId(newUrl);
+    // Update context immediately so 'Start Game' becomes enabled if valid
+    setVideoIdAction(newUrl, videoId || null);
+
+    // If the user changed the URL, hide the old preview if it doesn't match
+    if (videoId !== previewVideoId) {
+      setShowVideoPreview(false);
+    }
+  };
+
   // Preview video logic
   const handlePreviewVideo = (e) => {
     e.preventDefault();
@@ -72,7 +87,7 @@ const GameSetup = () => {
     <Card className="w-full max-w-3xl mx-auto animate-fadeIn">
       <CardHeader>
         <CardTitle className="text-2xl flex items-center gap-2">
-            <Settings className="h-6 w-6 text-primary"/> Game Setup
+          <Settings className="h-6 w-6 text-primary" /> Game Setup
         </CardTitle>
         <CardDescription>Configure your prediction game session below.</CardDescription>
       </CardHeader>
@@ -83,7 +98,7 @@ const GameSetup = () => {
         {/* Section 1: Game Title & Video */}
         <section className="space-y-4 p-5 border rounded-lg bg-muted/30 shadow-inner">
           <h4 className="text-lg font-semibold flex items-center gap-2 text-primary border-b pb-2 mb-4">
-            <Video className="h-5 w-5"/> Game & Video Details
+            <Video className="h-5 w-5" /> Game & Video Details
           </h4>
           <div>
             <label htmlFor="gameTitle" className="block text-sm font-medium mb-1.5 text-muted-foreground">Game Title</label>
@@ -93,9 +108,9 @@ const GameSetup = () => {
             <div>
               <label htmlFor="videoUrl" className="block text-sm font-medium mb-1.5 text-muted-foreground">YouTube Video URL</label>
               <div className="flex flex-col sm:flex-row gap-2">
-                <Input id="videoUrl" value={urlLocal} onChange={(e) => setUrlLocal(e.target.value)} placeholder="Paste YouTube link (e.g., https://www.youtube.com/watch?v=...)" required className="flex-grow" />
+                <Input id="videoUrl" value={urlLocal} onChange={handleUrlChange} placeholder="Paste YouTube link (e.g., https://www.youtube.com/watch?v=...)" required className="flex-grow" />
                 <Button type="submit" disabled={isPreviewLoading || !urlLocal.trim()} className="w-full sm:w-auto">
-                  {isPreviewLoading ? 'Loading...' : <><Youtube className="mr-2 h-4 w-4"/> Preview</>}
+                  {isPreviewLoading ? 'Loading...' : <><Youtube className="mr-2 h-4 w-4" /> Preview</>}
                 </Button>
               </div>
               {/* Display preview errors specifically */}
@@ -106,15 +121,15 @@ const GameSetup = () => {
               <div className="mt-4 border rounded-lg overflow-hidden shadow-md animate-fadeIn bg-black">
                 {/* **FIXED YouTube Embed URL** */}
                 <iframe
-                    width="100%"
-                    className="aspect-video block" // Ensure block display and aspect ratio
-                    src={`https://www.youtube.com/embed/${previewVideoId}?modestbranding=1&rel=0&showinfo=0`}
-                    title="YouTube video preview"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
+                  width="100%"
+                  className="aspect-video block" // Ensure block display and aspect ratio
+                  src={`https://www.youtube.com/embed/${previewVideoId}?modestbranding=1&rel=0&showinfo=0`}
+                  title="YouTube video preview"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
                 ></iframe>
-                 <MessageBox message="Video preview loaded successfully!" type="success" />
+                <MessageBox message="Video preview loaded successfully!" type="success" />
               </div>
             )}
           </form>
@@ -122,9 +137,9 @@ const GameSetup = () => {
 
         {/* Section 2: Custom Labels */}
         <section className="space-y-4 p-5 border rounded-lg bg-muted/30 shadow-inner">
-           <h4 className="text-lg font-semibold flex items-center gap-2 text-primary border-b pb-2 mb-4">
-                <Edit3 className="h-5 w-5"/> Custom Terms (Optional)
-           </h4>
+          <h4 className="text-lg font-semibold flex items-center gap-2 text-primary border-b pb-2 mb-4">
+            <Edit3 className="h-5 w-5" /> Custom Terms (Optional)
+          </h4>
           <p className="text-xs text-muted-foreground -mt-3">Define custom terms instead of "Yes" / "No". Leave blank to use defaults.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -141,7 +156,7 @@ const GameSetup = () => {
         {/* Section 3: Players */}
         <section className="space-y-4 p-5 border rounded-lg bg-muted/30 shadow-inner">
           <h4 className="text-lg font-semibold flex items-center gap-2 text-primary border-b pb-2 mb-4">
-            <UserPlus className="h-5 w-5"/> Add Players ({gameState.players.length})
+            <UserPlus className="h-5 w-5" /> Add Players ({gameState.players.length})
           </h4>
           <form onSubmit={handleAddPlayer} className="flex gap-2 mb-4">
             <Input value={newPlayerName} onChange={(e) => setNewPlayerName(e.target.value)} placeholder="Enter player name..." className="flex-grow" />
