@@ -29,50 +29,40 @@ const Gameplay = () => {
             // Define styles based on prediction state
             const cardBaseStyle = "p-4 rounded-lg border transition-all duration-300 ease-in-out";
             const cardDefaultStyle = "bg-card hover:bg-muted/50";
-            const cardPredictedStyleYes = "bg-emerald-900/50 border-emerald-500/50 shadow-lg transform scale-[1.03]";
-            const cardPredictedStyleNo = "bg-red-900/50 border-red-500/50 shadow-lg transform scale-[1.03]";
-            const predictionTextStyleYes = "text-emerald-300";
-            const predictionTextStyleNo = "text-red-300";
+            const cardPredictedStyleYes = "bg-emerald-950/30 border-emerald-500/50 shadow-lg";
+            const cardPredictedStyleNo = "bg-red-950/30 border-red-500/50 shadow-lg";
 
-            const displayLabel = playerPrediction === 'yes' ? yesLabel : noLabel;
             const cardStyle = hasPredicted
-                ? (playerPrediction === 'yes' ? cardPredictedStyleYes : cardPredictedStyleNo)
-                : cardDefaultStyle;
-            const predictionTextStyle = playerPrediction === 'yes' ? predictionTextStyleYes : predictionTextStyleNo;
+              ? (playerPrediction === 'yes' ? cardPredictedStyleYes : cardPredictedStyleNo)
+              : cardDefaultStyle;
 
             return (
               <div key={player.id} className={`${cardBaseStyle} ${cardStyle}`}>
                 <p className="font-semibold mb-3 text-center text-lg border-b border-border pb-2">{player.name}</p>
-                {hasPredicted ? (
-                  // Display prediction
-                  <div className="text-center py-4 flex flex-col items-center justify-center h-20">
-                    <p className={`text-lg font-bold ${predictionTextStyle}`}>
-                       Predicted:
-                    </p>
-                     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-base mt-1 ${predictionTextStyle}`}>
-                        {playerPrediction === 'yes' ? <Check className="h-5 w-5" /> : <X className="h-5 w-5" />}
-                        {displayLabel}
-                    </span>
-                  </div>
-                ) : (
-                  // Show prediction buttons
-                  <div className="flex flex-col sm:flex-row gap-2 justify-center mt-1 h-20 items-center">
-                    <Button
-                      onClick={() => makePrediction(player.id, 'yes')}
-                      variant="secondary"
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1 w-full py-2.5 text-base transform hover:scale-105 transition-transform shadow-md hover:shadow-lg"
-                    >
-                      <Check className="mr-1.5 h-5 w-5" /> {yesLabel}
-                    </Button>
-                    <Button
-                      onClick={() => makePrediction(player.id, 'no')}
-                      variant="secondary"
-                      className="bg-red-600 hover:bg-red-700 text-white flex-1 w-full py-2.5 text-base transform hover:scale-105 transition-transform shadow-md hover:shadow-lg"
-                    >
-                      <X className="mr-1.5 h-5 w-5" /> {noLabel}
-                    </Button>
-                  </div>
-                )}
+                <div className="flex flex-col sm:flex-row gap-2 justify-center mt-1 h-20 items-center">
+                  <Button
+                    onClick={() => makePrediction(player.id, 'yes')}
+                    className={`flex-1 w-full py-2.5 text-base transition-all duration-200 shadow-sm
+                        ${playerPrediction === 'yes'
+                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white ring-2 ring-emerald-400 ring-offset-2 ring-offset-transparent scale-105 font-bold shadow-lg z-10'
+                        : 'bg-emerald-700 hover:bg-emerald-600 text-white opacity-90 hover:opacity-100 hover:scale-105'}
+                        ${playerPrediction === 'no' ? 'opacity-40 grayscale hover:grayscale-0 hover:opacity-100' : ''}
+                      `}
+                  >
+                    <Check className={`mr-1.5 h-5 w-5 ${playerPrediction === 'yes' ? 'stroke-[3px]' : ''}`} /> {yesLabel}
+                  </Button>
+                  <Button
+                    onClick={() => makePrediction(player.id, 'no')}
+                    className={`flex-1 w-full py-2.5 text-base transition-all duration-200 shadow-sm
+                        ${playerPrediction === 'no'
+                        ? 'bg-red-600 hover:bg-red-700 text-white ring-2 ring-red-400 ring-offset-2 ring-offset-transparent scale-105 font-bold shadow-lg z-10'
+                        : 'bg-red-700 hover:bg-red-600 text-white opacity-90 hover:opacity-100 hover:scale-105'}
+                        ${playerPrediction === 'yes' ? 'opacity-40 grayscale hover:grayscale-0 hover:opacity-100' : ''}
+                      `}
+                  >
+                    <X className={`mr-1.5 h-5 w-5 ${playerPrediction === 'no' ? 'stroke-[3px]' : ''}`} /> {noLabel}
+                  </Button>
+                </div>
               </div>
             );
           })}
@@ -83,7 +73,7 @@ const Gameplay = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
             <Button onClick={finishGame} variant="destructive" className="w-full sm:w-auto">
-                <StepForward className="mr-2 h-4 w-4" /> End Game & Enter Answers
+              <StepForward className="mr-2 h-4 w-4" /> End Game & Enter Answers
             </Button>
             <Button onClick={startNewRound} disabled={!allPlayersPredicted} className="w-full sm:w-auto">
               Next Round <ArrowRight className="ml-2 h-4 w-4" />
