@@ -6,23 +6,43 @@ import MessageBox from './MessageBox';
 
 // Gameplay Component (Improved Player Card UI)
 const Gameplay = () => {
-  const { gameState, makePrediction, startNewRound, allPlayersPredicted, finishGame, errorMessage, setErrorMessage } = useContext(GameContext);
+  const { gameState, makePrediction, startNewRound, allPlayersPredicted, finishGame, errorMessage, setErrorMessage, videoPlayerRef } = useContext(GameContext); // Access videoPlayerRef
   const currentRoundData = gameState.rounds[gameState.currentRound - 1];
   const { yesLabel, noLabel } = gameState;
-  const [timestamp, setTimestamp] = React.useState('');
+  const [correctAnswer, setCorrectAnswer] = React.useState(null); // Local state for correct answer of CURRENT round
 
   if (!currentRoundData) return <p className="text-center text-muted-foreground p-10">Loading round...</p>;
 
   const handleNextRound = () => {
-    startNewRound(timestamp);
-    setTimestamp(''); // Reset for next round
+    let currentTimestamp = null;
+    if (videoPlayerRef.current && typeof videoPlayerRef.current.getCurrentTime === 'function') {
+      currentTimestamp = Math.floor(videoPlayerRef.current.getCurrentTime());
+    }
+
+    // Pass timestamp string (e.g. "125" seconds) or formatted. Let's store raw seconds or string.
+    // User asked for "like 1:17", so maybe format it? ReviewAnswers handles seconds parsing, so raw seconds is fine but let's send string.
+    // Actually, ReviewAnswers expects format like "1:17" or raw seconds. Let's send raw seconds string.
+    const timestampStr = currentTimestamp !== null ? currentTimestamp.toString() : null;
+
+    startNewRound(timestampStr, correctAnswer);
+    setCorrectAnswer(null); // Reset for next round
+  };
+
+  const handleFinishGame = () => {
+    let currentTimestamp = null;
+    if (videoPlayerRef.current && typeof videoPlayerRef.current.getCurrentTime === 'function') {
+      currentTimestamp = Math.floor(videoPlayerRef.current.getCurrentTime());
+    }
+    const timestampStr = currentTimestamp !== null ? currentTimestamp.toString() : null;
+
+    // Pass timestamp and correct answer to finishGame Action
+    finishGame(timestampStr, correctAnswer);
   };
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6 animate-fadeIn">
       <h2 className="text-3xl font-bold text-center">{gameState.gameTitle} - Round {gameState.currentRound}</h2>
       <MessageBox message={errorMessage} type="error" onClose={() => setErrorMessage('')} />
-
 
 
       <Card>
@@ -79,22 +99,38 @@ const Gameplay = () => {
           <p className="text-sm text-muted-foreground flex-1 text-center sm:text-left">
             {gameState.predictionsMadeThisRound.size} / {gameState.players.length} players predicted.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-center">
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <input
-                type="text"
-                placeholder="Time (e.g. 1:45)"
-                value={timestamp}
-                onChange={(e) => setTimestamp(e.target.value)}
-                className="h-10 px-3 rounded-md border border-input bg-background text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 w-24 sm:w-32"
-              />
+          <div className="flex flex-col xl:flex-row gap-4 w-full xl:w-auto items-center">
+
+            <div className="flex items-center gap-2 bg-muted/40 p-1.5 rounded-lg border">
+              <span className="text-xs font-medium px-2 text-muted-foreground whitespace-nowrap">Correct Answer (Optional):</span>
+              <div className="flex gap-1">
+                <Button
+                  size="sm"
+                  variant={correctAnswer === 'yes' ? 'default' : 'ghost'}
+                  onClick={() => setCorrectAnswer(correctAnswer === 'yes' ? null : 'yes')}
+                  className={`h-8 px-3 ${correctAnswer === 'yes' ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}`}
+                >
+                  {yesLabel}
+                </Button>
+                <Button
+                  size="sm"
+                  variant={correctAnswer === 'no' ? 'default' : 'ghost'}
+                  onClick={() => setCorrectAnswer(correctAnswer === 'no' ? null : 'no')}
+                  className={`h-8 px-3 ${correctAnswer === 'no' ? 'bg-red-600 hover:bg-red-700 text-white' : ''}`}
+                >
+                  {noLabel}
+                </Button>
+              </div>
             </div>
-            <Button onClick={finishGame} variant="destructive" className="w-full sm:w-auto">
-              <StepForward className="mr-2 h-4 w-4" /> End Game & Enter Answers
-            </Button>
-            <Button onClick={handleNextRound} disabled={!allPlayersPredicted} className="w-full sm:w-auto">
-              Next Round <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
+
+            <div className="flex gap-3 w-full sm:w-auto">
+              <Button onClick={handleFinishGame} variant="destructive" className="flex-1 sm:flex-initial">
+                <StepForward className="mr-2 h-4 w-4" /> End Game
+              </Button>
+              <Button onClick={handleNextRound} disabled={!allPlayersPredicted} className="flex-1 sm:flex-initial">
+                Next Round <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </CardFooter>
       </Card>
