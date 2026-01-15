@@ -172,10 +172,23 @@ export const GameProvider = ({ children }) => {
         setErrorMessage('');
     }, []);
 
+    const removeLastRound = useCallback(() => {
+        setErrorMessage('');
+        setGameState(prev => {
+            if (prev.rounds.length === 0) return prev;
+            const updatedRounds = prev.rounds.slice(0, -1);
+            return {
+                ...prev,
+                rounds: updatedRounds,
+                currentRound: updatedRounds.length
+            };
+        });
+    }, []);
+
     // Context value passed down to consumers
     const value = useMemo(() => ({
-        gameState, newPlayerName, setNewPlayerName, addPlayer, removePlayer, startGame, startNewRound, makePrediction, allPlayersPredicted, finishGame, submitCorrectAnswer, viewResults, resetGame, errorMessage, setErrorMessage, videoPlayerRef, setCustomLabels, setGameTitleAction, setVideoIdAction
-    }), [gameState, newPlayerName, errorMessage, allPlayersPredicted, addPlayer, removePlayer, startGame, startNewRound, makePrediction, finishGame, submitCorrectAnswer, viewResults, resetGame, setCustomLabels, setGameTitleAction, setVideoIdAction]);
+        gameState, newPlayerName, setNewPlayerName, addPlayer, removePlayer, startGame, startNewRound, removeLastRound, makePrediction, allPlayersPredicted, finishGame, submitCorrectAnswer, viewResults, resetGame, errorMessage, setErrorMessage, videoPlayerRef, setCustomLabels, setGameTitleAction, setVideoIdAction
+    }), [gameState, newPlayerName, errorMessage, allPlayersPredicted, addPlayer, removePlayer, startGame, startNewRound, removeLastRound, makePrediction, finishGame, submitCorrectAnswer, viewResults, resetGame, setCustomLabels, setGameTitleAction, setVideoIdAction]);
 
     return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
 };
