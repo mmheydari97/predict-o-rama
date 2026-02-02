@@ -1,9 +1,10 @@
 import React, { useContext, useMemo } from 'react';
-import { Trophy, Users, BarChart2, Zap, Lightbulb, Check, X, ArrowRight, Settings, Crown } from 'lucide-react';
+import { Trophy, Users, BarChart2, Zap, Lightbulb, Check, X, ArrowRight, Settings, Crown, Brain, Activity, UserPlus, Star } from 'lucide-react';
 import { GameContext } from '../contexts/GameContext';
 import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../ui/shadcn-stubs';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import ReviewAnswers from './ReviewAnswers';
+
 // Results Component (Show Game Results)
 const Results = () => {
   const { gameState, resetGame } = useContext(GameContext);
@@ -12,24 +13,67 @@ const Results = () => {
 
   // Calculate player scores and stats
   const playerStats = useMemo(() => {
-    // ... (existing stats logic)
+    // 1. Calculate basic stats and per-round data needed for advanced metrics
+    const roundDetails = gameState.rounds.map(round => {
+      let correctCount = 0;
+      let yesCount = 0;
+      let noCount = 0;
+      let totalPredictions = 0;
+
+      Object.values(round.predictions).forEach(p => {
+        totalPredictions++;
+        if (p.prediction === 'yes') yesCount++;
+        if (p.prediction === 'no') noCount++;
+        if (p.prediction === round.correctAnswer) correctCount++;
+      });
+
+      const majorityAnswer = yesCount > noCount ? 'yes' : (noCount > yesCount ? 'no' : null);
+
+      // Weight Calculation
+      const difficultyWeight = correctCount > 0 ? 1 / correctCount : 0;
+
+      return {
+        ...round,
+        majorityAnswer,
+        difficultyWeight,
+        correctCount
+      };
+    });
+
+    // 2. Compute stats for each player
     const stats = gameState.players.map(player => {
       let correctPredictions = 0;
       let totalPredictions = 0;
       let yesCount = 0;
       let noCount = 0;
 
-      gameState.rounds.forEach(round => {
+      let contrarianCount = 0;
+      let hardScore = 0;
+      let roundsParticipated = 0;
+
+      gameState.rounds.forEach((round, index) => {
         const playerPrediction = round.predictions[player.id]?.prediction;
-        if (playerPrediction && round.correctAnswer) {
+        const roundDetail = roundDetails[index];
+
+        if (playerPrediction) {
           totalPredictions++;
-          if (playerPrediction === round.correctAnswer) {
-            correctPredictions++;
+          roundsParticipated++;
+
+          // Basic Stats
+          if (round.correctAnswer) {
+            if (playerPrediction === round.correctAnswer) {
+              correctPredictions++;
+              // Hard Question Score
+              hardScore += roundDetail.difficultyWeight;
+            }
           }
-          if (playerPrediction === 'yes') {
-            yesCount++;
-          } else if (playerPrediction === 'no') {
-            noCount++;
+
+          if (playerPrediction === 'yes') yesCount++;
+          else if (playerPrediction === 'no') noCount++;
+
+          // Contrarian Score (Compare to majority)
+          if (roundDetail.majorityAnswer && playerPrediction !== roundDetail.majorityAnswer) {
+            contrarianCount++;
           }
         }
       });
@@ -41,12 +85,53 @@ const Results = () => {
         totalPredictions,
         accuracy: totalPredictions > 0 ? (correctPredictions / totalPredictions) * 100 : 0,
         yesCount,
-        noCount
+        noCount,
+        // Advanced Metrics
+        contrarianScore: roundsParticipated > 0 ? (contrarianCount / roundsParticipated) : 0,
+        hardScore: hardScore,
+        rawContrarianCount: contrarianCount,
       };
     });
 
-    // Sort by accuracy (highest first)
-    return stats.sort((a, b) => b.accuracy - a.accuracy);
+    // 3. Compute Player Similarity (Cross-player)
+    const statsWithSimilarity = stats.map(player => {
+      let maxSimilarity = -1;
+      let mostSimilarPlayerName = "None";
+
+      stats.forEach(otherPlayer => {
+        if (player.id === otherPlayer.id) return;
+
+        let agreements = 0;
+        let commonRounds = 0;
+
+        gameState.rounds.forEach(round => {
+          const p1 = round.predictions[player.id]?.prediction;
+          const p2 = round.predictions[otherPlayer.id]?.prediction;
+
+          if (p1 && p2) {
+            commonRounds++;
+            if (p1 === p2) agreements++;
+          }
+        });
+
+        if (commonRounds > 0) {
+          const similarity = agreements / commonRounds;
+          if (similarity > maxSimilarity) {
+            maxSimilarity = similarity;
+            mostSimilarPlayerName = otherPlayer.name;
+          }
+        }
+      });
+
+      return {
+        ...player,
+        largestSimilarity: maxSimilarity >= 0 ? maxSimilarity : 0,
+        mostSimilarPlayerName
+      };
+    });
+
+    // Sort by accuracy (highest first) as default
+    return statsWithSimilarity.sort((a, b) => b.accuracy - a.accuracy);
   }, [gameState.players, gameState.rounds]);
 
   // Calculate overall game stats
@@ -81,7 +166,22 @@ const Results = () => {
       yesAnswerCount,
       noAnswerCount
     };
-  }, [gameState.rounds]);
+  }, [gameState.rounds, yesLabel, noLabel]);
+
+  // Identify Badge Winners
+  const badges = useMemo(() => {
+    if (playerStats.length < 2) return null;
+
+    const sortedByContrarian = [...playerStats].sort((a, b) => b.contrarianScore - a.contrarianScore);
+    const sortedByHardScore = [...playerStats].sort((a, b) => b.hardScore - a.hardScore);
+    const sortedBySimilarity = [...playerStats].sort((a, b) => b.largestSimilarity - a.largestSimilarity);
+
+    const topContrarian = sortedByContrarian[0].contrarianScore > 0 ? sortedByContrarian[0] : null;
+    const topHardScore = sortedByHardScore[0].hardScore > 0 ? sortedByHardScore[0] : null;
+    const topSimilarity = sortedBySimilarity[0].largestSimilarity > 0 ? sortedBySimilarity[0] : null;
+
+    return { topContrarian, topHardScore, topSimilarity };
+  }, [playerStats]);
 
   // Prepare data for charts
   const playerBarChartData = useMemo(() => {
@@ -100,7 +200,6 @@ const Results = () => {
     ];
   }, [gameStats, yesLabel, noLabel]);
 
-  // Colors for charts
   const COLORS = ['#10b981', '#ef4444', '#3b82f6', '#f59e0b', '#8b5cf6'];
   const PIE_COLORS = ['#10b981', '#ef4444'];
 
@@ -129,6 +228,54 @@ const Results = () => {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Badges / Highlights Section */}
+      {badges && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {badges.topHardScore && (
+            <Card className="border-emerald-200 bg-emerald-50 dark:bg-emerald-900/10">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
+                  <Brain className="h-5 w-5" /> Sharp Eye
+                </CardTitle>
+                <CardDescription>Best at tough questions</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{badges.topHardScore.name}</div>
+                <div className="text-sm text-muted-foreground">Score: {badges.topHardScore.hardScore.toFixed(2)}</div>
+              </CardContent>
+            </Card>
+          )}
+          {badges.topContrarian && (
+            <Card className="border-purple-200 bg-purple-50 dark:bg-purple-900/10">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2 text-purple-700 dark:text-purple-400">
+                  <Activity className="h-5 w-5" /> Contrarian
+                </CardTitle>
+                <CardDescription>Most unique answers</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{badges.topContrarian.name}</div>
+                <div className="text-sm text-muted-foreground">Different {Math.round(badges.topContrarian.contrarianScore * 100)}% of the time</div>
+              </CardContent>
+            </Card>
+          )}
+          {badges.topSimilarity && (
+            <Card className="border-blue-200 bg-blue-50 dark:bg-blue-900/10">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2 text-blue-700 dark:text-blue-400">
+                  <UserPlus className="h-5 w-5" /> Twin Mind
+                </CardTitle>
+                <CardDescription>Highest agreement with another</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{badges.topSimilarity.name}</div>
+                <div className="text-sm text-muted-foreground">Match with {badges.topSimilarity.mostSimilarPlayerName}: {Math.round(badges.topSimilarity.largestSimilarity * 100)}%</div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       )}
 
       {/* Stats Grid */}
@@ -177,6 +324,55 @@ const Results = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Detailed Insights Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Star className="h-5 w-5 text-indigo-500" /> Insights & Analytics</CardTitle>
+          <CardDescription>Deep dive into player performance and behavior</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Player</TableHead>
+                <TableHead>Hard Question Score</TableHead>
+                <TableHead>Contrarian Score</TableHead>
+                <TableHead>Most Similar To</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {playerStats.map((player) => (
+                <TableRow key={player.id}>
+                  <TableCell className="font-medium">{player.name}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className="font-bold">{player.hardScore.toFixed(2)}</span>
+                      <span className="text-xs text-muted-foreground">Weighted Points</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className="font-bold">{(player.contrarianScore * 100).toFixed(0)}%</span>
+                      <span className="text-xs text-muted-foreground">{player.contrarianScore > 0.5 ? 'Contrarian' : 'Crowd-aligned'}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {player.mostSimilarPlayerName !== "None" ? (
+                      <div className="flex flex-col">
+                        <span>{player.mostSimilarPlayerName}</span>
+                        <span className="text-xs text-muted-foreground">{(player.largestSimilarity * 100).toFixed(0)}% Match</span>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">N/A</span>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -237,7 +433,7 @@ const Results = () => {
       {/* Detailed Results Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Detailed Results</CardTitle>
+          <CardTitle>Detailed Stats</CardTitle>
           <CardDescription>Complete breakdown of all player predictions</CardDescription>
         </CardHeader>
         <CardContent>
