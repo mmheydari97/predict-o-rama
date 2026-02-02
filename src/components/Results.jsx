@@ -134,6 +134,42 @@ const Results = () => {
     return statsWithSimilarity.sort((a, b) => b.accuracy - a.accuracy);
   }, [gameState.players, gameState.rounds]);
 
+  // Calculate Similarity Matrix
+  const similarityMatrix = useMemo(() => {
+    const players = gameState.players;
+    const matrix = {};
+
+    players.forEach(p1 => {
+      matrix[p1.id] = {};
+      players.forEach(p2 => {
+        if (p1.id === p2.id) {
+          matrix[p1.id][p2.id] = 100;
+          return;
+        }
+
+        let agreements = 0;
+        let commonRounds = 0;
+
+        gameState.rounds.forEach(round => {
+          const pred1 = round.predictions[p1.id]?.prediction;
+          const pred2 = round.predictions[p2.id]?.prediction;
+
+          if (pred1 && pred2) {
+            commonRounds++;
+            if (pred1 === pred2) {
+              agreements++;
+            }
+          }
+        });
+
+        const similarity = commonRounds > 0 ? (agreements / commonRounds) * 100 : 0;
+        matrix[p1.id][p2.id] = similarity;
+      });
+    });
+
+    return matrix;
+  }, [gameState.players, gameState.rounds]);
+
   // Calculate overall game stats
   const gameStats = useMemo(() => {
     let totalCorrect = 0;
@@ -324,6 +360,46 @@ const Results = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Similarity Matrix - NEW SECTION */}
+      {gameState.players.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5 text-blue-500" /> Player Similarity Matrix
+            </CardTitle>
+            <CardDescription>Correlation between players' answers (100% = Identical)</CardDescription>
+          </CardHeader>
+          <CardContent className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Player</TableHead>
+                  {gameState.players.map(p => (
+                    <TableHead key={p.id} className="text-center">{p.name}</TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {gameState.players.map(p1 => (
+                  <TableRow key={p1.id}>
+                    <TableCell className="font-medium">{p1.name}</TableCell>
+                    {gameState.players.map(p2 => {
+                      const value = similarityMatrix[p1.id]?.[p2.id] ?? 0;
+                      const isSelf = p1.id === p2.id;
+                      return (
+                        <TableCell key={p2.id} className={`text-center ${isSelf ? 'text-muted-foreground opacity-30' : ''}`}>
+                          {isSelf ? '-' : `${Math.round(value)}%`}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Detailed Insights Table */}
       <Card>
